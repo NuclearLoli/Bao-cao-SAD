@@ -1,0 +1,16 @@
+tmp/
+_bmad/render/
+_bmad-output/
+
+node_modules/
+.expo/
+dist/
+coverage/
+
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+Thumbs.db

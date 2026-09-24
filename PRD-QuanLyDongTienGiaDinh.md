@@ -33,7 +33,7 @@ Gia đình (2 vợ chồng + 1 con) có thu nhập ổn định theo tháng, chi
 - “Tôi muốn việc ghi chép nhẹ nhàng, không biến thành ‘kế toán’.”
 
 ### 2.3 Constraints
-- Web-first: thao tác nhanh trên điện thoại/laptop.
+- Client-first: ưu tiên trải nghiệm trên **mobile app**; có thể bổ sung web admin/desktop sau.
 - Ngân sách chung: **cả hai đều thấy mọi giao dịch**.
 - Thói quen: check-in tuần tối đa 15 phút; trong tuần ghi chi dưới 30 giây/lần.
 
@@ -79,12 +79,14 @@ Nguyên tắc: nhận lương → trích quỹ trước → phần còn lại l�
 - Cảnh báo sớm + dự đoán vượt ngân sách.
 - Gợi ý điều chỉnh (2–3 phương án) + cho phép người dùng chấp nhận/ghi chú.
 - 1 trang chốt tháng + lưu lịch sử điều chỉnh.
+ - **Mobile app**: luồng quick-add, dashboard tháng, weekly check-in, close month.
 
 ### 5.2 Out-of-scope (v1)
 - Đồng bộ ngân hàng tự động 100% (tùy đối tác).
 - Đầu tư/portfolio, tối ưu tài chính chuyên sâu.
 - Chia sẻ dữ liệu cho bên thứ ba / cộng đồng.
 - Kế toán doanh nghiệp / thuế.
+ - Desktop client riêng (nếu có) và web đầy đủ (đưa sang v2, trừ khi cần admin nội bộ).
 
 ## 6) Functional Requirements (FR)
 
@@ -140,10 +142,46 @@ Nguyên tắc: nhận lương → trích quỹ trước → phần còn lại l�
 4) Có cần “luật” riêng theo household (ví dụ mapping từ khóa → nhóm chi) ở UI hay để AI tự học ẩn?
 
 ## 11) Assumptions Index
-- MVP là web-first; mobile app có thể là v2.
+- MVP là **mobile-first**; web (nếu có) ưu tiên làm bản admin/backup sau.
 - Cả hai vợ chồng xem toàn bộ dữ liệu household (không có chế độ riêng tư trong MVP).
 - AI chỉ là trợ lý: gợi ý/giải thích/cảnh báo; người dùng quyết định.
 
+## 12) Gói dịch vụ (Free / Plus / Pro) & mở khóa AI agents
+
+Mục tiêu: tạo “lý do nâng cấp” tự nhiên dựa trên giá trị AI + phân tích sâu, trong khi bản Free vẫn đủ dùng cho thói quen check-in.
+
+### 12.1 Nguyên tắc đóng gói
+- **Free phải hoàn chỉnh cho core loop:** 4 quỹ + ghi giao dịch + dashboard tháng + weekly check-in cơ bản.
+- **Trả phí mở khóa chiều sâu, tốc độ và độ “thông minh”:** phân tích nâng cao, dự báo tốt hơn, agent hỗ trợ ra quyết định, tùy biến mạnh.
+- **Không khóa dữ liệu:** người dùng luôn xem được dữ liệu lịch sử; khác nhau ở “trí tuệ” và mức tự động hóa.
+
+### 12.2 Free (MVP baseline)
+- Household 2 người (ngân sách chung).
+- 4 quỹ + budget tháng (amount/%).
+- Ghi giao dịch manual + ảnh bill (upload).
+- Dashboard tháng (spent/room theo quỹ).
+- Weekly check-in: top chi + so sánh tuần trước (cơ bản).
+- AI: gợi ý phân loại ở mức “nhẹ” (có thể giới hạn quota/tuần), fallback manual luôn hoạt động.
+
+### 12.3 Plus (nâng trải nghiệm & “insights”)
+- AI phân loại tốt hơn + quota cao hơn (ảnh bill + mô tả).
+- Weekly check-in “thông minh”: nêu 3 điểm nổi bật (drivers) + cảnh báo sớm rõ ràng hơn.
+- Forecast EOM + alerts theo quỹ ổn định hơn (ít false positive).
+- Lưu “quy tắc household” (keyword → quỹ) ở UI để tăng độ đúng và minh bạch.
+- Xuất báo cáo: PDF/CSV (v2 nếu cần).
+
+### 12.4 Pro (AI agents & tối ưu theo mục tiêu)
+Mở khóa “agent mode” để hỗ trợ ra quyết định theo mục tiêu, không chỉ báo cáo.
+- **Agent “Budget Coach”**: đề xuất kế hoạch điều chỉnh trong tháng (2–3 phương án) với giải thích + trade-off.
+- **Agent “Anomaly Detective”**: tìm khoản bất thường theo thói quen gia đình và giải thích “vì sao bất thường”.
+- **Agent “Goal Planner”**: lập kế hoạch mục tiêu (du lịch/quỹ học/sửa nhà) và gợi ý phân bổ quỹ theo timeline.
+- **What-if simulation**: giả lập “nếu giảm X/tháng” thì đạt mục tiêu khi nào.
+- Tùy biến nâng cao: nhiều household hoặc thêm thành viên (v2 tùy chiến lược).
+
+### 12.5 Open Questions cho pricing
+1) Cần giới hạn Free bằng quota AI theo tuần/tháng hay giới hạn theo số ảnh bill?
+2) Pro agents có chạy “on-demand” hay có thêm lịch nhắc chủ động (notification) ở v2?
+3) Cần SKU “privacy/local-first” (chạy local nhiều hơn) như một gói cao cấp trong roadmap?
+
 ## Appendix A — Nguồn & bối cảnh
 - `DOC_BASE.md`: tài liệu nền từ slide “Quản lý dòng tiền gia đình”.
-

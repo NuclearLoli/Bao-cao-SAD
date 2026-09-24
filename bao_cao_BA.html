@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Báo cáo BA – Dự án Quản lý dòng tiền gia đình</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel2: rgba(255, 255, 255, 0.09);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.7);
+        --brand: #6ea8ff;
+        --ok: #32d583;
+        --warn: #fdb022;
+        --bad: #f97066;
+        --line: rgba(255, 255, 255, 0.14);
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        color: var(--text);
+        font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background:
+          radial-gradient(1100px 700px at 15% 10%, rgba(110, 168, 255, 0.25), transparent 55%),
+          radial-gradient(900px 700px at 90% 20%, rgba(50, 213, 131, 0.16), transparent 55%),
+          radial-gradient(900px 600px at 60% 95%, rgba(253, 176, 34, 0.12), transparent 55%),
+          linear-gradient(180deg, #070a14, var(--bg));
+      }
+
+      a { color: inherit; text-decoration: none; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 18px 64px; }
+
+      header {
+        padding: 18px 18px 16px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .kicker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(110, 168, 255, 0.12);
+        border: 1px solid rgba(110, 168, 255, 0.3);
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+
+      .pill small { color: rgba(255, 255, 255, 0.75); font-weight: 600; }
+
+      h1 { margin: 4px 0 8px; font-size: 28px; line-height: 1.15; letter-spacing: -0.5px; }
+      .subtitle { color: var(--muted); margin: 0; max-width: 78ch; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      .card {
+        grid-column: span 12;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 16px;
+        padding: 14px 14px 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.28);
+      }
+
+      @media (min-width: 900px) {
+        .col-6 { grid-column: span 6; }
+        .col-7 { grid-column: span 7; }
+        .col-5 { grid-column: span 5; }
+        .col-8 { grid-column: span 8; }
+        .col-4 { grid-column: span 4; }
+      }
+
+      h2 { margin: 0 0 10px; font-size: 16px; letter-spacing: 0.2px; }
+      h3 { margin: 14px 0 8px; font-size: 14px; color: rgba(255, 255, 255, 0.92); }
+      p { margin: 0 0 10px; color: rgba(255, 255, 255, 0.88); }
+      ul { margin: 0; padding-left: 18px; color: rgba(255, 255, 255, 0.88); }
+      li { margin: 6px 0; }
+
+      .muted { color: var(--muted); }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; }
+
+      .tagrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .tag {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.86);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .tag.ok { border-color: rgba(50, 213, 131, 0.35); background: rgba(50, 213, 131, 0.08); }
+      .tag.warn { border-color: rgba(253, 176, 34, 0.35); background: rgba(253, 176, 34, 0.08); }
+      .tag.bad { border-color: rgba(249, 112, 102, 0.35); background: rgba(249, 112, 102, 0.08); }
+      .tag.brand { border-color: rgba(110, 168, 255, 0.35); background: rgba(110, 168, 255, 0.08); }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      @media (min-width: 900px) { .split { grid-template-columns: 1fr 1fr; } }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.12);
+      }
+      .table th, .table td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 10px 10px;
+        vertical-align: top;
+        text-align: left;
+      }
+      .table th { color: rgba(255, 255, 255, 0.92); font-size: 12px; letter-spacing: 0.3px; }
+      .table td { color: rgba(255, 255, 255, 0.86); }
+      .table tr:last-child td { border-bottom: none; }
+
+      .note {
+        border-left: 3px solid rgba(110, 168, 255, 0.6);
+        padding: 10px 10px;
+        background: rgba(110, 168, 255, 0.06);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      footer {
+        margin-top: 18px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .hr {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.12);
+        margin: 12px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="kicker">
+          <span class="pill">Báo cáo BA <small>phiên hội tụ</small></span>
+          <span class="pill"><small>Ngày:</small> 2026-09-24</span>
+        </div>
+        <h1>Quản lý dòng tiền gia đình (2 vợ chồng + 1 con)</h1>
+        <p class="subtitle">
+          Mục tiêu là đưa ra bài toán/giải pháp ở mức BA đủ rõ để đi tiếp sang PRD/UX/Architecture và triển khai MVP.
+          Nguồn nội dung: tài liệu nền từ slide “Quản lý dòng tiền gia đình”.
+        </p>
+        <div class="tagrow">
+          <span class="tag brand">4 quỹ</span>
+          <span class="tag brand">check-in 15 phút/tuần</span>
+          <span class="tag ok">AI: phân loại • tóm tắt • cảnh báo</span>
+          <span class="tag warn">rủi ro: sai phân loại / thiếu tin cậy</span>
+        </div>
+      </header>
+
+      <div class="grid">
+        <section class="card col-7">
+          <h2>1) Tóm tắt điều hành</h2>
+          <p>
+            Gia đình thường “hẫy” cuối tháng không phải vì “kiếm ít” mà vì thiếu hệ thống nhìn dòng tiền theo tuần:
+            chi tiêu phân mảnh, phát sinh cho con liên tục, và thiếu một ngân sách chung rõ ràng cho hai người.
+          </p>
+          <div class="note">
+            Giải pháp BA đề xuất: một hệ thống quản lý chi tiêu cực nhẹ (ghi nhanh/chụp bill), áp dụng khung 4 quỹ,
+            kèm cơ chế check-in tuần (15 phút), và AI đảm nhiệm phần “mệt”: phân loại, tóm tắt, cảnh báo sớm, gợi ý
+            điều chỉnh để vẫn đạt mục tiêu.
+          </div>
+          <div class="hr"></div>
+          <h3>Định nghĩa thành công (MVP)</h3>
+          <ul>
+            <li>Gia đình “đỡ cày” cuối tháng: biết còn bao nhiêu “room” theo quỹ/nhóm chi.</li>
+            <li>Hai người thống nhất giới hạn chi thay vì tranh luận cảm tính.</li>
+            <li>Check-in tuần diễn ra đều, không quá 15 phút.</li>
+          </ul>
+        </section>
+
+        <section class="card col-5">
+          <h2>2) Vấn đề cốt lõi</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nguyên nhân</th>
+                <th>Biểu hiện</th>
+                <th>Tác hại</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Chi tiêu phân mảnh</td>
+                <td>Quẹt/ship/tiền mặt ở nhiều nơi, khó tổng hợp</td>
+                <td>Không biết đang vượt nhóm nào</td>
+              </tr>
+              <tr>
+                <td>Phát sinh cho con</td>
+                <td>Khoản nhỏ nhưng liên tục, không đều</td>
+                <td>Vỡ kế hoạch, dễ “rút” vào quỹ khác</td>
+              </tr>
+              <tr>
+                <td>Hai người khác ưu tiên</td>
+                <td>Không có ngân sách chung, thiếu minh bạch</td>
+                <td>Hiểu lầm, tranh luận, mất niềm tin</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="hr"></div>
+          <h3>Insight BA</h3>
+          <p class="muted">
+            Nếu người dùng phải “ghi chép nhiều” thì sẽ bỏ cuộc. Trọng tâm là quyết định nhanh trong giới hạn, nhờ
+            nhìn theo tuần.
+          </p>
+        </section>
+
+        <section class="card col-6">
+          <h2>3) Khung ngân sách: 4 quỹ</h2>
+          <ul>
+            <li><b>Cố định</b>: nhà, điện nước, internet, học phí, bảo hiểm, trả góp…</li>
+            <li><b>Gia đình &amp; Con</b>: ăn uống, đi lại, chăm sóc, vui chơi, mua sắm thường ngày…</li>
+            <li><b>Dự phòng</b>: 3–6 tháng chi phí thiết yếu (chỉ dùng khi thật cần).</li>
+            <li><b>Mục tiêu</b>: du lịch, quỹ học, mua xe, sửa nhà…</li>
+          </ul>
+          <div class="hr"></div>
+          <p class="muted">
+            Nguyên tắc vận hành: <b>nhận lương → trích quỹ trước → phần còn lại mới là chi linh hoạt</b>.
+          </p>
+        </section>
+
+        <section class="card col-6">
+          <h2>4) Quy trình sử dụng (tối giản)</h2>
+          <ul>
+            <li><b>Ngày nhận lương (5’)</b>: trích Cố định + Dự phòng + Mục tiêu trước.</li>
+            <li><b>Trong tuần (30s/lần)</b>: ghi nhanh hoặc chụp bill.</li>
+            <li><b>Check-in cuối tuần (15’)</b>: xem khoản lớn, bất thường, và nhóm sắp vượt.</li>
+            <li><b>Chốt cuối tháng (10’)</b>: 1 trang tổng kết + điều chỉnh tỷ lệ quỹ tháng sau.</li>
+          </ul>
+          <div class="hr"></div>
+          <p class="muted">
+            Điểm nhấn BA: “check-in theo tuần” là thói quen cốt lõi, không phải báo cáo cuối tháng.
+          </p>
+        </section>
+
+        <section class="card col-8">
+          <h2>5) Phạm vi MVP (Business Scope)</h2>
+          <div class="split">
+            <div>
+              <h3>In-scope</h3>
+              <ul>
+                <li>Tạo 4 quỹ + tỷ lệ/giới hạn theo tháng.</li>
+                <li>Ghi chi tiêu nhanh (manual) + đính kèm ảnh bill.</li>
+                <li>Phân loại theo nhóm/quỹ (ban đầu manual, sau đó AI gợi ý).</li>
+                <li>Tổng hợp theo tuần/tháng: top khoản chi + xu hướng.</li>
+                <li>Cảnh báo sớm: dự báo vượt nhóm &amp; “room” còn lại.</li>
+                <li>Gợi ý điều chỉnh: 2–3 phương án “cắt nhẹ”.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Out-of-scope (giai đoạn sau)</h3>
+              <ul>
+                <li>Tự động đồng bộ ngân hàng 100% (tùy API/đối tác).</li>
+                <li>Tối ưu đầu tư/portfolio, khuyến nghị tài chính chuyên sâu.</li>
+                <li>Kế toán chuẩn doanh nghiệp, hóa đơn điện tử, thuế.</li>
+                <li>Chia sẻ dữ liệu cho bên thứ ba (không ưu tiên do riêng tư).</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="card col-4">
+          <h2>6) Personas &amp; nhu cầu</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                <th>Nhu cầu</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Vợ/Chồng A (người theo dõi)</td>
+                <td>Nhìn tổng quan nhanh; cảnh báo sớm; ra quyết định.</td>
+              </tr>
+              <tr>
+                <td>Vợ/Chồng B (người chi tiêu linh hoạt)</td>
+                <td>Ghi cực nhanh; không bị “soi”; vẫn thấy giới hạn.</td>
+              </tr>
+              <tr>
+                <td>Gia đình (đồng thuận)</td>
+                <td>Ngân sách chung rõ; ít tranh luận; đạt mục tiêu.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card col-12">
+          <h2>7) Yêu cầu nghiệp vụ (BRD-level)</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Yêu cầu</th>
+                <th>Ưu tiên</th>
+                <th>Ghi chú BA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">FR-01</td>
+                <td>Tạo và cấu hình 4 quỹ theo tháng (tỷ lệ/số tiền)</td>
+                <td><span class="tag ok">Must</span></td>
+                <td>Cho phép “điều chỉnh nhẹ” cuối tháng</td>
+              </tr>
+              <tr>
+                <td class="mono">FR-02</td>
+                <td>Ghi chi tiêu nhanh (số tiền, nhóm, ghi chú), đính kèm ảnh bill</td>
+                <td><span class="tag ok">Must</span></td>
+                <td>Mục tiêu: &lt; 30 giây/lần</td>
+              </tr>
+              <tr>
+                <td class="mono">FR-03</td>
+                <td>Tổng hợp tuần: top khoản chi, biến động, khoản bất thường</td>
+                <td><span class="tag ok">Must</span></td>
+                <td>Phục vụ check-in 15 phút</td>
+              </tr>
+              <tr>
+                <td class="mono">FR-04</td>
+                <td>Cảnh báo sớm &amp; dự báo cuối tháng theo nhịp chi hiện tại</td>
+                <td><span class="tag warn">Should</span></td>
+                <td>Hiển thị “room” còn lại</td>
+              </tr>
+              <tr>
+                <td class="mono">FR-05</td>
+                <td>Gợi ý điều chỉnh (2–3 phương án) để vẫn đạt mục tiêu</td>
+                <td><span class="tag warn">Should</span></td>
+                <td>Ưu tiên gợi ý “ít đau nhất”</td>
+              </tr>
+              <tr>
+                <td class="mono">FR-06</td>
+                <td>AI gợi ý phân loại từ ảnh bill/sao kê/tin nhắn</td>
+                <td><span class="tag bad">Could</span></td>
+                <td>MVP có thể manual + gợi ý rule-based</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card col-6">
+          <h2>8) Dữ liệu cốt lõi (khái niệm)</h2>
+          <ul>
+            <li><b>Household</b>: gia đình / nhóm chia sẻ ngân sách.</li>
+            <li><b>Member</b>: thành viên (vai trò, quyền xem/sửa).</li>
+            <li><b>Fund</b>: 4 quỹ (cố định/gia đình&amp;con/dự phòng/mục tiêu).</li>
+            <li><b>BudgetPeriod</b>: tháng (tỷ lệ/số tiền mục tiêu cho mỗi quỹ).</li>
+            <li><b>Transaction</b>: giao dịch chi (số tiền, ngày, nhóm/quỹ, ghi chú, ảnh đính kèm).</li>
+            <li><b>WeeklySummary</b>: tổng hợp tuần (top chi, bất thường, dự báo).</li>
+            <li><b>Alert</b>: cảnh báo (sắp vượt/quá ngưỡng/nhịp chi bất thường).</li>
+          </ul>
+        </section>
+
+        <section class="card col-6">
+          <h2>9) KPI/Metric gợi ý</h2>
+          <ul>
+            <li>Tỷ lệ check-in tuần thành công (tuần có mở “summary” + xác nhận).</li>
+            <li>Tỷ lệ ghi giao dịch trong 24h (độ “tươi” dữ liệu).</li>
+            <li>Số lần vượt ngân sách theo quỹ (giảm dần qua 3 tháng).</li>
+            <li>Mức độ hài lòng: “ít tranh luận hơn” (survey 1 câu/tháng).</li>
+          </ul>
+          <div class="hr"></div>
+          <p class="muted">
+            BA khuyến nghị: đo thói quen (check-in, tốc độ ghi) trước khi tối ưu AI.
+          </p>
+        </section>
+
+        <section class="card col-12">
+          <h2>10) Rủi ro &amp; câu hỏi mở</h2>
+          <div class="split">
+            <div>
+              <h3>Rủi ro</h3>
+              <ul>
+                <li><b>Adoption</b>: nếu thao tác ghi quá nhiều bước → bỏ dùng.</li>
+                <li><b>Niềm tin AI</b>: phân loại sai → người dùng “mất tin”.</li>
+                <li><b>Riêng tư</b>: dữ liệu chi tiêu nhạy cảm → cần kiểm soát truy cập &amp; lưu trữ.</li>
+                <li><b>Hai người dùng</b>: xung đột quyền sửa / cách gọi danh mục.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Câu hỏi mở (để chốt trước khi làm PRD)</h3>
+              <ul>
+                <li>Giới hạn/room: hiển thị theo quỹ hay theo danh mục con (ăn uống/mua sắm…)?</li>
+                <li>Quy tắc “bất thường”: theo ngưỡng tuyệt đối hay theo trung bình 4 tuần?</li>
+                <li>Chia sẻ: hai người đều thấy mọi giao dịch hay có chế độ “riêng tư”?</li>
+                <li>Mức AI trong MVP: rule-based + chỉnh tay hay OCR/LLM ngay?</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="card col-12">
+          <h2>11) Kết luận hội tụ</h2>
+          <p>
+            Hướng đi hội tụ: <b>tối giản thao tác</b> + <b>nhìn theo tuần</b> + <b>giới hạn rõ ràng theo 4 quỹ</b>.
+            AI chỉ nên “đỡ mệt” (gợi ý, tóm tắt, cảnh báo), không giành quyền quyết định.
+          </p>
+          <div class="tagrow">
+            <span class="tag ok">MVP: Manual-first</span>
+            <span class="tag brand">Weekly check-in</span>
+            <span class="tag warn">AI gợi ý (opt-in)</span>
+            <span class="tag brand">1 trang chốt tháng</span>
+          </div>
+        </section>
+      </div>
+
+      <footer>
+        Tài liệu tạo trong workspace phục vụ BA/PRD/UX/Architecture. Nếu bạn muốn, mình có thể sinh tiếp PRD + user stories + backlog từ báo cáo này.
+      </footer>
+    </div>
+  </body>
+</html>
+

@@ -1,6 +1,6 @@
-# BỘ ĐẶC TẢ EPIC & USER STORIES — DỰ ÁN QUẢN LÝ DÒNG TIỀN GIA ĐÌNH (WEB)
+# BỘ ĐẶC TẢ EPIC & USER STORIES — DỰ ÁN QUẢN LÝ DÒNG TIỀN GIA ĐÌNH (MOBILE-FIRST)
 
-> **Dự án:** Quản lý dòng tiền gia đình (Web) — 4 quỹ + check-in 15 phút/tuần + AI hỗ trợ  
+> **Dự án:** Quản lý dòng tiền gia đình (Mobile-first) — 4 quỹ + check-in 15 phút/tuần + AI hỗ trợ  
 > **Phương pháp quản trị:** Agile / Scrum  
 > **Nguồn yêu cầu:** `PRD-QuanLyDongTienGiaDinh.md`  
 > **Personas:**
@@ -176,7 +176,7 @@ mindmap
   - Household đã join.
   - Tháng hiện tại có budgets (khuyến nghị; nếu chưa có thì vẫn cho tạo giao dịch và cảnh báo “chưa set budget”).
 - **UX/Flow:**
-  - Quick-add modal: amount (required), date (default today), fund (default), note (optional).
+  - Mobile-first quick-add: amount (required), date (default today), fund (default), note (optional).
 - **Acceptance Criteria (Given/When/Then):**
   - [x] Given user ở dashboard, When nhập amount hợp lệ và save, Then giao dịch được tạo thành công.
   - [x] Given giao dịch tạo thành công, When quay về dashboard, Then spent/room của quỹ tương ứng cập nhật.
@@ -434,3 +434,41 @@ mindmap
 | **Epic 4** | Tổng quan + Cảnh báo + Gợi ý | 4 US | 29 SP | **P0/P1 (Giá trị)** |
 | **Epic 5** | Chốt tháng & Điều chỉnh | 2 US | 10 SP | **P0 (Cốt lõi)** |
 | **TỔNG** | **5 EPICS** | **15 US** | **84 SP** | **MVP đề xuất ~2–4 sprint tuỳ team** |
+
+---
+
+## (TÙY CHỌN) EPIC 6: GÓI DỊCH VỤ (FREE/PLUS/PRO) & AI AGENTS
+
+**Mô tả:** Bổ sung cơ chế gói dịch vụ để mở khóa tính năng nâng cao và AI agents “thông minh hơn” (không chặn core loop của Free).
+
+> Epic này nên làm sau khi MVP core loop (Epic 1–5) ổn định.
+
+### User Stories Chi Tiết:
+
+#### US-6.1: Quản lý gói dịch vụ (Subscription state)
+- **User Story:** Là một *Household*, tôi muốn *thấy trạng thái gói (Free/Plus/Pro) và ngày hết hạn (nếu có)*, để *biết mình đang dùng được gì*.
+- **Độ ưu tiên:** P2 (Nice to have) | **Story Points:** 3
+- **Scope (In/Out):**
+  - In: hiển thị plan + gating UI theo plan.
+  - Out: thanh toán thực tế (Stripe/MoMo) (có thể làm sau).
+- **Preconditions:** Household tồn tại.
+- **Acceptance Criteria:**
+  - [x] Hiển thị plan hiện tại ở Settings.
+  - [x] Các tính năng Pro hiển thị lock badge khi chưa có plan.
+  - [x] Nâng plan (mock flag) mở khóa tính năng ngay.
+
+#### US-6.2: Gate AI quota theo gói
+- **User Story:** Là một *Household*, tôi muốn *AI có quota theo gói*, để *Free vẫn dùng được cơ bản nhưng Plus/Pro “mượt” hơn*.
+- **Độ ưu tiên:** P2 (Nice to have) | **Story Points:** 5
+- **Acceptance Criteria:**
+  - [x] Free: quota thấp (ví dụ số lần classify/tuần) + thông báo khi hết.
+  - [x] Plus/Pro: quota cao hơn; khi hết quota, fallback manual.
+  - [x] Không bao giờ chặn tạo giao dịch vì hết quota.
+
+#### US-6.3: Agent “Budget Coach” (Pro)
+- **User Story:** Là một *Household (Pro)*, tôi muốn *agent đề xuất 2–3 phương án điều chỉnh “ít đau nhất” với trade-off rõ*, để *đạt mục tiêu mà ít mệt*.
+- **Độ ưu tiên:** P2 (Nice to have) | **Story Points:** 8
+- **Acceptance Criteria:**
+  - [x] Khi có alert vượt, agent trả 2–3 phương án + impact estimate + trade-off.
+  - [x] Có nút “Apply as decision” để lưu lựa chọn (không auto sửa dữ liệu quá khứ).
+  - [x] Nếu agent lỗi → fallback suggestions cơ bản (US-4.4).
