@@ -1,9 +1,11 @@
 import { Redirect } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
 import { AppScreen } from '@/components/app-screen';
 import { LoadingState } from '@/components/loading-state';
 import { useHousehold } from '@/features/household/ui/household-provider';
+import { AnalyticsTheme } from '@/theme/analytics-theme';
 
 export default function RecoveryScreen() {
   const { state, retry, reset } = useHousehold();
@@ -29,21 +31,23 @@ export default function RecoveryScreen() {
   return (
     <AppScreen centered>
       <View style={styles.card}>
-        <View style={styles.icon}><Text style={styles.iconText}>!</Text></View>
+        <View style={styles.icon}>
+          <Text style={styles.iconText}>⚠️</Text>
+        </View>
         <Text style={styles.title}>{corrupted ? 'Dữ liệu cần được khôi phục' : 'Chưa thể đọc dữ liệu'}</Text>
         <Text style={styles.description}>
           {corrupted
-            ? 'Dữ liệu hộ gia đình trên thiết bị không còn đúng định dạng. Ứng dụng sẽ không tự ghi đè lên dữ liệu này.'
-            : 'Bộ nhớ thiết bị đang tạm thời không phản hồi. Hãy thử lại sau ít phút.'}
+            ? 'Dữ liệu lưu trữ cục bộ không còn đúng cấu trúc phân tích tài chính. Ứng dụng sẽ bảo vệ an toàn và không tự động ghi đè.'
+            : 'Bộ nhớ lưu trữ thiết bị đang tạm thời không phản hồi. Hãy thử kết nối lại.'}
         </Text>
 
-        <Pressable accessibilityRole="button" onPress={() => void retry()} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Thử đọc lại</Text>
-        </Pressable>
+        <AnimatedPressable accessibilityRole="button" onPress={() => void retry()} style={styles.primaryButton}>
+          <Text style={styles.primaryButtonText}>Thử Đọc Lại Dữ Liệu</Text>
+        </AnimatedPressable>
         {corrupted ? (
-          <Pressable accessibilityRole="button" onPress={confirmReset} style={styles.dangerButton}>
-            <Text style={styles.dangerButtonText}>Xóa dữ liệu cục bộ và tạo lại</Text>
-          </Pressable>
+          <AnimatedPressable accessibilityRole="button" onPress={confirmReset} style={styles.dangerButton}>
+            <Text style={styles.dangerButtonText}>Xóa Dữ Liệu Cục Bộ & Khởi Tạo Mới</Text>
+          </AnimatedPressable>
         ) : null}
       </View>
     </AppScreen>
@@ -53,42 +57,63 @@ export default function RecoveryScreen() {
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E8DDD5',
-    borderRadius: 24,
+    backgroundColor: AnalyticsTheme.colors.cardElevated,
+    borderColor: AnalyticsTheme.colors.borderLight,
+    borderRadius: AnalyticsTheme.borderRadius.large,
     borderWidth: 1,
     padding: 26,
+    width: '100%',
   },
   icon: {
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
     borderRadius: 24,
     height: 48,
     justifyContent: 'center',
     width: 48,
   },
-  iconText: { color: '#92400E', fontSize: 24, fontWeight: '900' },
-  title: { color: '#241B16', fontSize: 26, fontWeight: '900', marginTop: 18, textAlign: 'center' },
-  description: { color: '#685C55', fontSize: 15, lineHeight: 23, marginTop: 11, textAlign: 'center' },
+  iconText: { fontSize: 24 },
+  title: {
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 22,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+    marginTop: 18,
+    textAlign: 'center',
+  },
+  description: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 22,
+    marginTop: 11,
+    textAlign: 'center',
+  },
   primaryButton: {
     alignItems: 'center',
     alignSelf: 'stretch',
-    backgroundColor: '#166534',
-    borderRadius: 14,
+    backgroundColor: AnalyticsTheme.colors.cyan,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
     justifyContent: 'center',
     marginTop: 26,
-    minHeight: 52,
+    minHeight: 50,
   },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  primaryButtonText: {
+    color: '#041B2D',
+    fontSize: 14,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+  },
   dangerButton: {
     alignItems: 'center',
     alignSelf: 'stretch',
-    borderColor: '#C2410C',
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderColor: AnalyticsTheme.colors.rose,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
+    borderWidth: 1,
     justifyContent: 'center',
     marginTop: 12,
-    minHeight: 52,
+    minHeight: 50,
   },
-  dangerButtonText: { color: '#C2410C', fontSize: 14, fontWeight: '800' },
+  dangerButtonText: {
+    color: AnalyticsTheme.colors.rose,
+    fontSize: 13,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
 });

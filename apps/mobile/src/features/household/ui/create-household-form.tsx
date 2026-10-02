@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
+import { AnalyticsTheme } from '@/theme/analytics-theme';
 import { HOUSEHOLD_NAME_MAX_LENGTH, validateHouseholdName } from '../domain/household';
 
 export function CreateHouseholdForm({
@@ -16,8 +18,7 @@ export function CreateHouseholdForm({
   const validation = useMemo(() => validateHouseholdName(name), [name]);
   const validationMessage = touched && !validation.valid ? validation.message : null;
   const fieldMessage = validationMessage ?? submitError ?? 'Nhập tên từ 1 đến 80 ký tự.';
-  const buttonDisabled = submitting;
-  const buttonInactive = !validation.valid || submitting;
+  const buttonDisabled = submitting || !validation.valid;
 
   const submit = async () => {
     setTouched(true);
@@ -40,14 +41,14 @@ export function CreateHouseholdForm({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>BƯỚC 1 / 1</Text>
+      <Text style={styles.eyebrow}>BƯỚC 1 / 1 • KHỞI TẠO TỔNG QUAN</Text>
       <Text style={styles.title}>Tạo không gian tài chính chung</Text>
       <Text style={styles.description}>
-        Đặt tên dễ nhận biết. Bạn sẽ là quản trị viên đầu tiên của hộ gia đình này.
+        Đặt tên dễ nhận biết cho tổ ấm. Bạn sẽ là quản trị viên đầu tiên quản lý dòng tiền và mời bạn đời tham gia.
       </Text>
 
       <View style={styles.field}>
-        <Text style={styles.label}>Tên hộ gia đình</Text>
+        <Text style={styles.label}>TÊN HỘ GIA ĐÌNH</Text>
         <TextInput
           accessibilityLabel="Tên hộ gia đình"
           accessibilityHint={fieldMessage}
@@ -59,8 +60,8 @@ export function CreateHouseholdForm({
             setSubmitError(null);
           }}
           onSubmitEditing={() => void submit()}
-          placeholder="Ví dụ: Gia đình Nguyễn"
-          placeholderTextColor="#87938C"
+          placeholder="Ví dụ: Gia đình Hạnh Phúc"
+          placeholderTextColor={AnalyticsTheme.colors.textMuted}
           returnKeyType="done"
           style={[styles.input, validationMessage ? styles.inputInvalid : null]}
           value={name}
@@ -73,70 +74,95 @@ export function CreateHouseholdForm({
         </View>
       </View>
 
-      <Pressable
+      <AnimatedPressable
         accessibilityLabel="Tạo hộ gia đình"
         accessibilityRole="button"
         accessibilityState={{ busy: submitting, disabled: buttonDisabled }}
         disabled={buttonDisabled}
         onPress={() => void submit()}
-        style={({ pressed }) => [
-          styles.button,
-          buttonInactive && styles.buttonDisabled,
-          pressed && validation.valid && !submitting && styles.buttonPressed,
-        ]}>
+        style={[styles.button, buttonDisabled ? styles.buttonDisabled : null]}>
         {submitting ? (
-          <ActivityIndicator color="#FFFFFF" />
+          <ActivityIndicator color="#041B2D" />
         ) : (
-          <Text style={styles.buttonText}>Tạo hộ gia đình</Text>
+          <Text style={styles.buttonText}>Tạo Hộ Gia Đình & Tiếp Tục →</Text>
         )}
-      </Pressable>
-      <Text style={styles.privacy}>Dữ liệu hiện được lưu cục bộ trên thiết bị này.</Text>
+      </AnimatedPressable>
+      <Text style={styles.privacy}>Dữ liệu telemetry được mã hóa an toàn và đồng bộ tức thời.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#DCE5DF',
-    borderRadius: 24,
+    backgroundColor: AnalyticsTheme.colors.cardElevated,
+    borderColor: AnalyticsTheme.colors.borderLight,
+    borderRadius: AnalyticsTheme.borderRadius.large,
     borderWidth: 1,
     padding: 24,
-    shadowColor: '#102A1C',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 28,
-    elevation: 3,
+    width: '100%',
   },
-  eyebrow: { color: '#15803D', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
-  title: { color: '#122118', fontSize: 29, fontWeight: '800', lineHeight: 36, marginTop: 12 },
-  description: { color: '#58655E', fontSize: 16, lineHeight: 24, marginTop: 10 },
-  field: { marginTop: 28 },
-  label: { color: '#26382E', fontSize: 14, fontWeight: '700', marginBottom: 9 },
-  input: {
-    backgroundColor: '#FAFCFB',
-    borderColor: '#BBC9C0',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    color: '#122118',
-    fontSize: 17,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
+  eyebrow: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 1.2,
   },
-  inputInvalid: { borderColor: '#B42318' },
-  fieldMeta: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 7 },
-  errorText: { color: '#B42318', flex: 1, fontSize: 13, lineHeight: 18 },
-  counter: { color: '#708078', fontSize: 12 },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#166534',
-    borderRadius: 14,
-    minHeight: 54,
-    justifyContent: 'center',
+  title: {
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 24,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+    lineHeight: 32,
+    marginTop: 10,
+  },
+  description: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 22,
     marginTop: 8,
   },
-  buttonDisabled: { backgroundColor: '#A9B7AF' },
-  buttonPressed: { backgroundColor: '#14532D', transform: [{ scale: 0.99 }] },
-  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  privacy: { color: '#718078', fontSize: 12, lineHeight: 18, marginTop: 16, textAlign: 'center' },
+  field: { marginTop: 22 },
+  label: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: AnalyticsTheme.colors.backgroundSubtle,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
+    borderWidth: 1,
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  inputInvalid: { borderColor: AnalyticsTheme.colors.rose },
+  fieldMeta: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 7 },
+  errorText: { color: AnalyticsTheme.colors.rose, flex: 1, fontSize: 12, lineHeight: 16 },
+  counter: { color: AnalyticsTheme.colors.textMuted, fontSize: 11 },
+  button: {
+    alignItems: 'center',
+    backgroundColor: AnalyticsTheme.colors.cyan,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
+    minHeight: 50,
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+  },
+  buttonText: {
+    color: '#041B2D',
+    fontSize: 14,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+  },
+  privacy: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 14,
+    textAlign: 'center',
+  },
 });

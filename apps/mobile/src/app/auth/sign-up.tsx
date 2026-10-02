@@ -1,9 +1,11 @@
 import { Redirect, router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
 import { AppScreen } from '@/components/app-screen';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
+import { AnalyticsTheme } from '@/theme/analytics-theme';
 
 const plans = ['Free', 'Plus', 'Pro'] as const;
 
@@ -12,7 +14,9 @@ export default function SignUpScreen() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [plan, setPlan] = useState<(typeof plans)[number]>('Plus');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [plan, setPlan] = useState<(typeof plans)[number]>('Pro');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -21,23 +25,31 @@ export default function SignUpScreen() {
       return errorMessage;
     }
     if (!displayName.trim() || !email.trim() || password.length < 6) {
-      return 'Điền tên, email và mật khẩu từ 6 ký tự trở lên.';
+      return 'Điền họ tên, email hợp lệ và mật khẩu từ 6 ký tự.';
     }
-    return 'Tạo xong sẽ vào app luôn bằng tài khoản demo mới.';
-  }, [displayName, email, errorMessage, password]);
+    if (confirmPassword && password !== confirmPassword) {
+      return 'Mật khẩu xác nhận chưa khớp.';
+    }
+    return 'Gói Pro mở khóa trọn bộ phân tích tài chính và AI dự báo.';
+  }, [confirmPassword, displayName, email, errorMessage, password]);
 
   if (state.status === 'authenticated') {
     return <Redirect href="/" />;
   }
 
   const submit = async () => {
+    if (password !== confirmPassword) {
+      setErrorMessage('Mật khẩu xác nhận không khớp.');
+      return;
+    }
+
     setSubmitting(true);
     setErrorMessage(null);
     try {
       await signUp({ displayName, email, password, plan });
       router.replace('/' as never);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Không thể tạo tài khoản demo.');
+      setErrorMessage(error instanceof Error ? error.message : 'Không thể tạo tài khoản.');
     } finally {
       setSubmitting(false);
     }
@@ -46,69 +58,112 @@ export default function SignUpScreen() {
   return (
     <AppScreen centered>
       <View style={styles.card}>
-        <Pressable accessibilityRole="button" onPress={() => router.replace('/auth/welcome' as never)} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Về màn chào</Text>
-        </Pressable>
-        <Text style={styles.eyebrow}>TẠO TÀI KHOẢN DEMO</Text>
-        <Text style={styles.title}>Dựng mặt tiền app cho buổi show</Text>
+        <AnimatedPressable
+          accessibilityRole="button"
+          onPress={() => router.replace('/auth/welcome' as never)}
+          style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Quay lại</Text>
+        </AnimatedPressable>
+
+        <Text style={styles.eyebrow}>ĐĂNG KÝ THÀNH VIÊN</Text>
+        <Text style={styles.title}>Tạo Tài Khoản Mới</Text>
         <Text style={styles.subtitle}>
-          Bạn có thể chọn luôn plan để giả lập các gói mở khóa tính năng AI/agent ngay trên front-end.
+          Khởi tạo tài khoản gia đình để bắt đầu kiểm soát dòng tiền và lập ngân sách 4 quỹ.
         </Text>
 
-        <Text style={styles.label}>Tên hiển thị</Text>
+        <Text style={styles.label}>HỌ & TÊN</Text>
         <TextInput
           accessibilityLabel="Tên hiển thị"
-          onChangeText={setDisplayName}
-          placeholder="Ví dụ: Nguyễn Văn Nu"
-          placeholderTextColor="#90A097"
+          onChangeText={(v) => {
+            setDisplayName(v);
+            setErrorMessage(null);
+          }}
+          placeholder="Ví dụ: Hoàng Tuấn Nu"
+          placeholderTextColor={AnalyticsTheme.colors.textMuted}
           style={styles.input}
           value={displayName}
         />
 
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>EMAIL</Text>
         <TextInput
           accessibilityLabel="Email đăng ký"
           autoCapitalize="none"
           keyboardType="email-address"
-          onChangeText={setEmail}
+          onChangeText={(v) => {
+            setEmail(v);
+            setErrorMessage(null);
+          }}
           placeholder="you@example.com"
-          placeholderTextColor="#90A097"
+          placeholderTextColor={AnalyticsTheme.colors.textMuted}
           style={styles.input}
           value={email}
         />
 
-        <Text style={styles.label}>Mật khẩu</Text>
+        <View style={styles.passwordHeader}>
+          <Text style={styles.labelNoMargin}>MẬT KHẨU</Text>
+          <AnimatedPressable onPress={() => setShowPassword((prev) => !prev)}>
+            <Text style={styles.togglePasswordText}>{showPassword ? 'Ẩn' : 'Hiện'}</Text>
+          </AnimatedPressable>
+        </View>
         <TextInput
           accessibilityLabel="Mật khẩu đăng ký"
-          onChangeText={setPassword}
-          placeholder="Tối thiểu 6 ký tự"
-          placeholderTextColor="#90A097"
-          secureTextEntry
+          onChangeText={(v) => {
+            setPassword(v);
+            setErrorMessage(null);
+          }}
+          placeholder="Tối thiểu 6 ký tự, gồm chữ & số"
+          placeholderTextColor={AnalyticsTheme.colors.textMuted}
+          secureTextEntry={!showPassword}
           style={styles.input}
           value={password}
         />
 
-        <Text style={styles.label}>Chọn plan</Text>
+        <Text style={styles.label}>XÁC NHẬN MẬT KHẨU</Text>
+        <TextInput
+          accessibilityLabel="Xác nhận mật khẩu"
+          onChangeText={(v) => {
+            setConfirmPassword(v);
+            setErrorMessage(null);
+          }}
+          placeholder="Nhập lại mật khẩu"
+          placeholderTextColor={AnalyticsTheme.colors.textMuted}
+          secureTextEntry={!showPassword}
+          style={styles.input}
+          value={confirmPassword}
+        />
+
+        <Text style={styles.label}>GÓI DỊCH VỤ</Text>
         <View style={styles.planRow}>
           {plans.map((option) => {
             const active = plan === option;
             return (
-              <Pressable
+              <AnimatedPressable
                 key={option}
                 accessibilityRole="button"
                 onPress={() => setPlan(option)}
                 style={[styles.planButton, active ? styles.planButtonActive : null]}>
                 <Text style={[styles.planButtonText, active ? styles.planButtonTextActive : null]}>{option}</Text>
-              </Pressable>
+              </AnimatedPressable>
             );
           })}
         </View>
 
-        <Text style={styles.helperText}>{validationMessage}</Text>
+        <Text style={[styles.helperText, errorMessage ? styles.errorHelper : null]}>{validationMessage}</Text>
 
-        <Pressable accessibilityRole="button" disabled={submitting} onPress={() => void submit()} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>{submitting ? 'Đang tạo...' : 'Tạo tài khoản & vào app'}</Text>
-        </Pressable>
+        <AnimatedPressable
+          accessibilityRole="button"
+          disabled={submitting}
+          onPress={() => void submit()}
+          style={styles.primaryButton}>
+          <Text style={styles.primaryButtonText}>{submitting ? 'Đang tạo...' : 'Tạo Tài Khoản & Bắt Đầu →'}</Text>
+        </AnimatedPressable>
+
+        <AnimatedPressable
+          accessibilityRole="button"
+          onPress={() => router.push('/auth/sign-in' as never)}
+          style={styles.linkButton}>
+          <Text style={styles.linkButtonText}>Đã có tài khoản? Đăng nhập ngay</Text>
+        </AnimatedPressable>
       </View>
     </AppScreen>
   );
@@ -116,48 +171,122 @@ export default function SignUpScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#DCE5DF',
-    borderRadius: 28,
+    backgroundColor: AnalyticsTheme.colors.cardElevated,
+    borderColor: AnalyticsTheme.colors.borderLight,
+    borderRadius: AnalyticsTheme.borderRadius.large,
     borderWidth: 1,
     padding: 24,
+    width: '100%',
   },
-  backButton: { alignSelf: 'flex-start', marginBottom: 18 },
-  backButtonText: { color: '#256341', fontSize: 13, fontWeight: '700' },
-  eyebrow: { color: '#15803D', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
-  title: { color: '#16231C', fontSize: 30, fontWeight: '900', marginTop: 12 },
-  subtitle: { color: '#65746B', fontSize: 15, lineHeight: 23, marginTop: 10 },
-  label: { color: '#23352C', fontSize: 14, fontWeight: '800', marginBottom: 10, marginTop: 18 },
+  backButton: { alignSelf: 'flex-start', marginBottom: 14 },
+  backButtonText: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 13,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+  eyebrow: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 1.2,
+  },
+  title: {
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 24,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+    marginTop: 8,
+  },
+  subtitle: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  label: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 0.8,
+    marginBottom: 6,
+    marginTop: 14,
+  },
   input: {
-    backgroundColor: '#FAFCFB',
-    borderColor: '#C8D4CD',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    color: '#16231C',
+    backgroundColor: AnalyticsTheme.colors.backgroundSubtle,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
+    borderWidth: 1,
+    color: AnalyticsTheme.colors.textPrimary,
     fontSize: 15,
     paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingVertical: 12,
+  },
+  passwordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+    marginTop: 14,
+  },
+  labelNoMargin: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 0.8,
+  },
+  togglePasswordText: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 12,
+    fontWeight: AnalyticsTheme.typography.weightBold,
   },
   planRow: { flexDirection: 'row', gap: 10 },
   planButton: {
     alignItems: 'center',
-    backgroundColor: '#EEF3EF',
-    borderRadius: 16,
+    backgroundColor: AnalyticsTheme.colors.backgroundSubtle,
+    borderColor: AnalyticsTheme.colors.border,
+    borderWidth: 1,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
     flex: 1,
     justifyContent: 'center',
-    minHeight: 48,
+    minHeight: 44,
   },
-  planButtonActive: { backgroundColor: '#153E29' },
-  planButtonText: { color: '#607066', fontSize: 13, fontWeight: '700' },
-  planButtonTextActive: { color: '#FFFFFF' },
-  helperText: { color: '#7C5D28', fontSize: 13, lineHeight: 20, marginTop: 14 },
+  planButtonActive: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: AnalyticsTheme.colors.cyan,
+  },
+  planButtonText: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+  planButtonTextActive: {
+    color: AnalyticsTheme.colors.cyan,
+  },
+  helperText: {
+    color: AnalyticsTheme.colors.amber,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 12,
+  },
+  errorHelper: {
+    color: AnalyticsTheme.colors.rose,
+  },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: '#153E29',
-    borderRadius: 18,
+    backgroundColor: AnalyticsTheme.colors.cyan,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
     justifyContent: 'center',
     marginTop: 18,
-    minHeight: 54,
+    minHeight: 50,
   },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  primaryButtonText: {
+    color: '#041B2D',
+    fontSize: 14,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+  },
+  linkButton: { alignItems: 'center', marginTop: 14 },
+  linkButtonText: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: AnalyticsTheme.typography.weightMedium,
+  },
 });

@@ -1,8 +1,17 @@
 import { PropsWithChildren } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CherryBlossomBackground } from '@/components/cherry-blossom-background';
+import { AnalyticsBackground } from '@/components/analytics-background';
+import { AnalyticsTheme } from '@/theme/analytics-theme';
 
 export function AppScreen({
   children,
@@ -11,13 +20,14 @@ export function AppScreen({
 }: PropsWithChildren<{ centered?: boolean; contentStyle?: StyleProp<ViewStyle> }>) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CherryBlossomBackground />
+      <AnalyticsBackground />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardArea}>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, centered ? styles.scrollContentCentered : null]}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
           <View style={[styles.content, contentStyle]}>{children}</View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -26,9 +36,22 @@ export function AppScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFF0F6' },
+  safeArea: {
+    flex: 1,
+    backgroundColor: AnalyticsTheme.colors.background,
+  },
   keyboardArea: { flex: 1 },
-  scrollContent: { flexGrow: 1, padding: 24 },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 28,
+  },
   scrollContentCentered: { justifyContent: 'center' },
-  content: { width: '100%', maxWidth: 560, alignSelf: 'center', zIndex: 1 },
+  content: {
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
+    zIndex: 1,
+  },
 });

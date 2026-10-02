@@ -1,4 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { AnimatedPressable } from '@/components/animated-pressable';
+import { AnalyticsTheme } from '@/theme/analytics-theme';
 
 export function ConfirmActionBar({
   title,
@@ -24,15 +27,18 @@ export function ConfirmActionBar({
         {description}
       </Text>
       <View style={styles.actions}>
-        <Pressable accessibilityRole="button" onPress={onCancel} style={styles.cancelButton}>
+        <AnimatedPressable
+          accessibilityRole="button"
+          onPress={onCancel}
+          style={styles.cancelButton}>
           <Text style={styles.cancelButtonText}>{cancelLabel}</Text>
-        </Pressable>
-        <Pressable
+        </AnimatedPressable>
+        <AnimatedPressable
           accessibilityRole="button"
           onPress={onConfirm}
           style={[styles.confirmButton, tone === 'danger' ? styles.confirmButtonDanger : null]}>
           <Text style={styles.confirmButtonText}>{confirmLabel}</Text>
-        </Pressable>
+        </AnimatedPressable>
       </View>
     </View>
   );
@@ -40,39 +46,44 @@ export function ConfirmActionBar({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#F7FAF8',
-    borderColor: '#DDE7E0',
+    backgroundColor: '#1E293B',
+    borderColor: AnalyticsTheme.colors.borderLight,
     borderRadius: 20,
     borderWidth: 1,
     marginTop: 14,
     padding: 16,
   },
   cardDanger: {
-    backgroundColor: '#FFF5F5',
-    borderColor: '#F0C5C5',
+    backgroundColor: '#2A1215',
+    borderColor: 'rgba(244, 63, 94, 0.4)',
   },
-  title: { color: '#17231D', fontSize: 15, fontWeight: '800' },
-  titleDanger: { color: '#7A1F1F' },
-  description: { color: '#64736A', fontSize: 13, lineHeight: 20, marginTop: 6 },
-  descriptionDanger: { color: '#8B5252' },
+  title: { color: AnalyticsTheme.colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  titleDanger: { color: '#FDA4AF' },
+  description: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 6,
+  },
+  descriptionDanger: { color: '#FECDD3' },
   actions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   cancelButton: {
     alignItems: 'center',
-    backgroundColor: '#EEF2EF',
+    backgroundColor: '#334155',
     borderRadius: 14,
     flex: 1,
     justifyContent: 'center',
     minHeight: 46,
   },
-  cancelButtonText: { color: '#45564D', fontSize: 13, fontWeight: '800' },
+  cancelButtonText: { color: '#E2E8F0', fontSize: 13, fontWeight: '800' },
   confirmButton: {
     alignItems: 'center',
-    backgroundColor: '#153E29',
+    backgroundColor: AnalyticsTheme.colors.emerald,
     borderRadius: 14,
     flex: 1,
     justifyContent: 'center',
     minHeight: 46,
   },
-  confirmButtonDanger: { backgroundColor: '#8B1E1E' },
-  confirmButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  confirmButtonDanger: { backgroundColor: AnalyticsTheme.colors.rose },
+  confirmButtonText: { color: '#090D16', fontSize: 13, fontWeight: '800' },
 });

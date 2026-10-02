@@ -23,7 +23,7 @@ describe('AuthSessionProvider sharing flow', () => {
       await hook.result.current.signUp({
         displayName: 'Owner',
         email: 'owner@example.com',
-        password: '123456',
+        password: 'SecurePass123',
         plan: 'Plus',
       });
     });
@@ -43,7 +43,7 @@ describe('AuthSessionProvider sharing flow', () => {
       await hook.result.current.signUp({
         displayName: 'Partner',
         email: 'partner@example.com',
-        password: '123456',
+        password: 'SecurePass123',
         plan: 'Free',
       });
     });
@@ -68,7 +68,7 @@ describe('AuthSessionProvider sharing flow', () => {
       await hook.result.current.signUp({
         displayName: 'Owner',
         email: 'owner2@example.com',
-        password: '123456',
+        password: 'SecurePass123',
         plan: 'Pro',
       });
     });

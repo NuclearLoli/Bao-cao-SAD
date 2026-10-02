@@ -1,0 +1,61 @@
+export const AnalyticsTheme = {
+  colors: {
+    background: '#090D16',
+    backgroundSubtle: '#0F1626',
+    card: '#111827',
+    cardElevated: '#162032',
+    cardHighlight: '#1E2D44',
+    border: '#1E293B',
+    borderLight: '#2D3D54',
+    borderActive: '#38BDF8',
+
+    textPrimary: '#F8FAFC',
+    textSecondary: '#94A3B8',
+    textMuted: '#64748B',
+
+    // Financial Analytics Accents
+    cyan: '#38BDF8',
+    emerald: '#10B981',
+    amber: '#F59E0B',
+    rose: '#F43F5E',
+    purple: '#A855F7',
+    indigo: '#6366F1',
+
+    glowCyan: 'rgba(56, 189, 248, 0.12)',
+    glowEmerald: 'rgba(16, 185, 129, 0.12)',
+    glowRose: 'rgba(244, 63, 94, 0.12)',
+  },
+  typography: {
+    monoNumber: 'System',
+    weightBlack: '900' as const,
+    weightBold: '800' as const,
+    weightSemiBold: '700' as const,
+    weightMedium: '600' as const,
+    weightRegular: '400' as const,
+    sizes: {
+      xs: 10,
+      sm: 12,
+      base: 14,
+      md: 15,
+      lg: 17,
+      xl: 20,
+      xxl: 24,
+      display: 28,
+    },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 20,
+    xxl: 24,
+  },
+  borderRadius: {
+    small: 8,
+    medium: 12,
+    large: 18,
+    xl: 24,
+    full: 9999,
+  },
+} as const;

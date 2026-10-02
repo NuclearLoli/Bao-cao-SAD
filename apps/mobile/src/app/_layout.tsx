@@ -7,12 +7,15 @@ import { AuthSessionIdentityProvider, AuthSessionProvider, useAuthSession } from
 import { DemoFinanceProvider } from '@/features/finance/ui/demo-finance-provider';
 import { createAsyncStorageHouseholdRepository } from '@/features/household/data/async-storage-household-repository';
 import { createDefaultHouseholdServices, HouseholdProvider } from '@/features/household/ui/household-provider';
+import { AppSecurityProvider } from '@/features/security/ui/app-security-provider';
 
 export default function RootLayout() {
   return (
-    <AuthSessionProvider>
-      <AppProviders />
-    </AuthSessionProvider>
+    <AppSecurityProvider>
+      <AuthSessionProvider>
+        <AppProviders />
+      </AuthSessionProvider>
+    </AppSecurityProvider>
   );
 }
 
@@ -43,18 +46,22 @@ function AppProviders() {
   return (
     <HouseholdProvider services={householdServices}>
       <DemoFinanceProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FFF0F6' } }}>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#090D16' } }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="auth/welcome" />
           <Stack.Screen name="auth/sign-in" />
           <Stack.Screen name="auth/sign-up" />
+          <Stack.Screen name="auth/forgot-password" />
           <Stack.Screen name="household/create" />
           <Stack.Screen name="household/share" />
           <Stack.Screen name="dashboard" />
           <Stack.Screen name="budget/setup" />
           <Stack.Screen name="transactions/index" />
           <Stack.Screen name="transactions/new" />
+          <Stack.Screen name="weekly-checkin" />
+          <Stack.Screen name="bills-and-goals" />
+          <Stack.Screen name="monthly-close" />
           <Stack.Screen name="account" />
           <Stack.Screen name="recovery" />
         </Stack>

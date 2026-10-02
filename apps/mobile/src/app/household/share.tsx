@@ -1,7 +1,8 @@
 import { Redirect, router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
 import { AppScreen } from '@/components/app-screen';
 import { ConfirmActionBar } from '@/components/confirm-action-bar';
 import { LoadingState } from '@/components/loading-state';
@@ -9,6 +10,7 @@ import { PageHeader } from '@/components/page-header';
 import { PrimaryTabBar } from '@/components/primary-tab-bar';
 import { useAuthSession } from '@/features/auth/ui/auth-session-provider';
 import { useHousehold } from '@/features/household/ui/household-provider';
+import { AnalyticsTheme } from '@/theme/analytics-theme';
 
 export default function HouseholdShareScreen() {
   const {
@@ -47,34 +49,34 @@ export default function HouseholdShareScreen() {
         : sharedHousehold.householdLabel;
     }
     if (pendingShareInvites.length > 0) {
-      return 'Bạn đang có lời mời chờ phản hồi';
+      return 'Lời Mời Đang Chờ Phản Hồi';
     }
     if (householdState.status === 'ready') {
-      return 'Household riêng tư';
+      return 'Không Gian Gia Đình Riêng Tư';
     }
-    return 'Chưa bật cộng tác';
+    return 'Chưa Bật Đồng Bộ';
   }, [householdState, pendingShareInvites.length, sharedHousehold]);
 
   const statusText = useMemo(() => {
     if (sharedHousehold?.isDemoSharedHousehold) {
-      return 'Đây là household mẫu của Nu và Mai để bạn demo nhanh luồng cùng quản lý quỹ chung.';
+      return 'Không gian gia đình kết nối hai vợ chồng: cùng xem radar thu chi, phân bổ quỹ và kiểm soát dòng tiền chung.';
     }
     if (sharedHousehold) {
       return sharedHousehold.pendingInvites.length > 0
-        ? `Đang có ${sharedHousehold.pendingInvites.length} lời mời chờ phản hồi. Thành viên hiện tại vẫn dùng chung một dashboard và cùng chỉnh dữ liệu.`
-        : 'Các thành viên hiện tại đang dùng chung dashboard, ngân sách và giao dịch trong cùng một household.';
+        ? `Đang có ${sharedHousehold.pendingInvites.length} lời mời chờ phản hồi. Hai người dùng chung một dashboard và cập nhật giao dịch thời gian thực.`
+        : 'Cả hai thành viên đang dùng chung dashboard, phân bổ 4 quỹ và đối soát chi tiêu trong cùng một tổ ấm.';
     }
     if (pendingShareInvites.length > 0) {
-      return 'Bạn có thể chấp nhận lời mời để vào chung household, hoặc bỏ qua để giữ dữ liệu cá nhân riêng.';
+      return 'Bạn có thể chấp nhận lời mời để đồng bộ dữ liệu tổ ấm chung, hoặc từ chối để giữ phiên riêng biệt.';
     }
     if (householdState.status === 'ready') {
-      return 'Household này hiện chỉ do bạn quản lý. Gửi lời mời để thêm một account cùng quản lý quỹ chung.';
+      return 'Không gian này hiện chỉ do bạn quản lý. Gửi lời mời qua email để thêm bạn đời cùng theo dõi dòng tiền.';
     }
-    return 'Tạo household trước hoặc nhận lời mời từ một household có sẵn để bắt đầu cộng tác.';
+    return 'Tạo tổ ấm trước hoặc nhận lời mời từ gia đình có sẵn để bắt đầu đồng bộ hai thiết bị.';
   }, [householdState.status, pendingShareInvites.length, sharedHousehold]);
 
   if (authState.status === 'loading') {
-    return <LoadingState label="Đang tải chia sẻ household…" />;
+    return <LoadingState label="Đang tải thiết lập chia sẻ…" />;
   }
   if (authState.status !== 'authenticated') {
     return <Redirect href="/auth/welcome" />;
@@ -108,14 +110,20 @@ export default function HouseholdShareScreen() {
   return (
     <AppScreen contentStyle={styles.screenContent}>
       <PageHeader
-        eyebrow="QUẢN LÝ CHIA SẺ"
-        title="Cộng tác như một app thật"
-        subtitle="Front-end này giờ có flow chia sẻ thật cho buổi demo: gửi lời mời, chấp nhận lời mời, xem pending invite và quản lý thành viên ngay trong app."
+        eyebrow="ĐỒNG BỘ 2 THIẾT BỊ VỢ CHỒNG"
+        title="Quản Lý Ghép Đôi & Chia Sẻ"
+        subtitle="Mô hình cộng tác 2 chiều: mời bạn đời, ghép đôi thiết bị, xem trạng thái lời mời và phân quyền thu chi thời gian thực."
         backLabel="← Về dashboard"
       />
 
       <View style={styles.statusCard}>
-        <Text style={styles.statusEyebrow}>TRẠNG THÁI HIỆN TẠI</Text>
+        <View style={styles.statusHeaderRow}>
+          <Text style={styles.statusEyebrow}>TRẠNG THÁI LIÊN KẾT</Text>
+          <View style={styles.liveTag}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>TELEMETRY ACTIVE</Text>
+          </View>
+        </View>
         <Text style={styles.statusTitle}>{statusTitle}</Text>
         <Text style={styles.statusText}>{statusText}</Text>
       </View>
@@ -136,7 +144,7 @@ export default function HouseholdShareScreen() {
       {pendingShareInvites.length > 0 ? (
         <View style={styles.sectionCard}>
           <Text style={styles.sectionEyebrow}>LỜI MỜI DÀNH CHO BẠN</Text>
-          <Text style={styles.sectionTitle}>Bạn có thể tham gia household chung</Text>
+          <Text style={styles.sectionTitle}>Tham Gia Tổ Ấm Chung</Text>
           <View style={styles.stack}>
             {pendingShareInvites.map((invite) => (
               <View key={invite.id} style={styles.inviteCard}>
@@ -144,35 +152,35 @@ export default function HouseholdShareScreen() {
                   <View>
                     <Text style={styles.inviteEmail}>{invite.invitedEmail}</Text>
                     <Text style={styles.inviteMeta}>
-                      Mã mời {invite.code} · tạo ngày {invite.createdAtLabel}
+                      Mã ghép đôi: <Text style={styles.boldCyan}>{invite.code}</Text> · {invite.createdAtLabel}
                     </Text>
                   </View>
                   <View style={styles.pendingBadge}>
-                    <Text style={styles.pendingBadgeText}>Pending</Text>
+                    <Text style={styles.pendingBadgeText}>PENDING</Text>
                   </View>
                 </View>
                 <View style={styles.inlineActions}>
-                  <Pressable
+                  <AnimatedPressable
                     accessibilityRole="button"
                     onPress={() =>
                       setPendingAction({
-                        title: 'Xác nhận tham gia household',
+                        title: 'Xác nhận tham gia tổ ấm',
                         description:
-                          'Sau khi chấp nhận, account này sẽ dùng chung dashboard, ngân sách và giao dịch với household được mời.',
+                          'Sau khi chấp nhận, tài khoản này sẽ đồng bộ dashboard, ngân sách 4 quỹ và các giao dịch chung.',
                         confirmLabel: 'Tham gia ngay',
                         run: () => acceptShareInvite(invite.id),
                       })
                     }
                     style={styles.primaryInlineButton}>
-                    <Text style={styles.primaryInlineButtonText}>Chấp nhận</Text>
-                  </Pressable>
-                  <Pressable
+                    <Text style={styles.primaryInlineButtonText}>Chấp nhận ghép đôi</Text>
+                  </AnimatedPressable>
+                  <AnimatedPressable
                     accessibilityRole="button"
                     onPress={() =>
                       setPendingAction({
                         title: 'Xác nhận từ chối lời mời',
                         description:
-                          'Lời mời này sẽ bị từ chối và account hiện tại vẫn giữ dữ liệu riêng của mình.',
+                          'Lời mời này sẽ bị hủy và bạn vẫn duy trì phiên làm việc độc lập.',
                         confirmLabel: 'Từ chối lời mời',
                         tone: 'danger',
                         run: () => declineShareInvite(invite.id),
@@ -180,7 +188,7 @@ export default function HouseholdShareScreen() {
                     }
                     style={styles.secondaryInlineButton}>
                     <Text style={styles.secondaryInlineButtonText}>Từ chối</Text>
-                  </Pressable>
+                  </AnimatedPressable>
                 </View>
               </View>
             ))}
@@ -190,14 +198,14 @@ export default function HouseholdShareScreen() {
 
       {householdState.status === 'ready' || sharedHousehold ? (
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionEyebrow}>MỜI THÀNH VIÊN</Text>
-          <Text style={styles.sectionTitle}>Thêm một account cùng quản lý</Text>
+          <Text style={styles.sectionEyebrow}>MỜI BẠN ĐỜI</Text>
+          <Text style={styles.sectionTitle}>Kết Nối Thiết Bị Hai Vợ Chồng</Text>
           <Text style={styles.sectionText}>
-            Nhập email của người muốn cùng quản lý household. Sau khi họ đăng nhập bằng email đó,
-            lời mời sẽ hiện ra để chấp nhận ngay.
+            Nhập email của bạn đời. Khi người đó đăng nhập app trên máy cá nhân,
+            lời mời ghép đôi kèm mã xác thực sẽ hiển thị để phê duyệt tức thì.
           </Text>
 
-          <Text style={styles.fieldLabel}>Email người được mời</Text>
+          <Text style={styles.fieldLabel}>EMAIL BẠN ĐỜI ĐƯỢC MỜI</Text>
           <TextInput
             accessibilityLabel="Email người được mời"
             autoCapitalize="none"
@@ -207,8 +215,8 @@ export default function HouseholdShareScreen() {
               setFeedback(null);
               setPendingAction(null);
             }}
-            placeholder="Ví dụ: mai@example.com"
-            placeholderTextColor="#90A097"
+            placeholder="Ví dụ: vo.yeu@example.com"
+            placeholderTextColor={AnalyticsTheme.colors.textMuted}
             style={styles.input}
             value={inviteEmail}
           />
@@ -216,18 +224,18 @@ export default function HouseholdShareScreen() {
           <Text style={styles.helperText}>
             {feedback ??
               (sharedHousehold?.isDemoSharedHousehold
-                ? 'Household mẫu Nu/Mai chỉ để xem demo nhanh. Hãy tạo account mới để demo flow mời thật.'
-                : 'Gợi ý: tạo thêm một account demo khác, rồi đăng nhập account đó để chấp nhận lời mời.')}
+                ? 'Đang ở chế độ gia đình mẫu Nu/Mai. Mọi thay đổi thu chi được đồng bộ tức thời.'
+                : 'Mẹo: Bạn có thể nhập email bất kỳ để tạo mã ghép đôi tức thời.')}
           </Text>
 
-          <Pressable
+          <AnimatedPressable
             accessibilityRole="button"
             disabled={!canManageHousehold || submitting}
             onPress={() =>
               setPendingAction({
-                title: 'Xác nhận tạo lời mời chia sẻ',
+                title: 'Xác nhận tạo lời mời ghép đôi',
                 description:
-                  'Lời mời sẽ được gửi vào front-end demo cho email này và người nhận có thể chấp nhận để vào cùng household.',
+                  'Mã ghép đôi sẽ được cấp để bạn đời đăng nhập và kết nối với dữ liệu tổ ấm.',
                 confirmLabel: 'Tạo lời mời',
                 run: submitInvite,
               })
@@ -237,16 +245,16 @@ export default function HouseholdShareScreen() {
               !canManageHousehold || submitting ? styles.buttonDisabled : null,
             ]}>
             <Text style={styles.primaryButtonText}>
-              {submitting ? 'Đang tạo lời mời...' : 'Tạo lời mời chia sẻ'}
+              {submitting ? 'Đang gửi mã...' : '📨 Gửi Lời Mời Ghép Đôi'}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       ) : null}
 
       {currentPendingInvites.length > 0 ? (
         <View style={styles.sectionCard}>
           <Text style={styles.sectionEyebrow}>LỜI MỜI ĐÃ GỬI</Text>
-          <Text style={styles.sectionTitle}>Đang chờ thành viên phản hồi</Text>
+          <Text style={styles.sectionTitle}>Đang Chờ Bạn Đời Chấp Nhận</Text>
           <View style={styles.stack}>
             {currentPendingInvites.map((invite) => (
               <View key={invite.id} style={styles.inviteCard}>
@@ -254,17 +262,17 @@ export default function HouseholdShareScreen() {
                   <View>
                     <Text style={styles.inviteEmail}>{invite.invitedEmail}</Text>
                     <Text style={styles.inviteMeta}>
-                      {invite.invitedDisplayName} · mã {invite.code}
+                      {invite.invitedDisplayName} · Mã ghép đôi: <Text style={styles.boldCyan}>{invite.code}</Text>
                     </Text>
                   </View>
-                  <Pressable
+                  <AnimatedPressable
                     accessibilityRole="button"
                     disabled={!canManageHousehold}
                     onPress={() =>
                       setPendingAction({
                         title: 'Xác nhận thu hồi lời mời',
                         description:
-                          'Người nhận sẽ không còn thấy lời mời này nữa trong màn quản lý chia sẻ.',
+                          'Mã ghép đôi sẽ bị vô hiệu hóa ngay lập tức.',
                         confirmLabel: 'Thu hồi lời mời',
                         tone: 'danger',
                         run: () => revokeShareInvite(invite.id),
@@ -272,7 +280,7 @@ export default function HouseholdShareScreen() {
                     }
                     style={[styles.ghostButton, !canManageHousehold ? styles.buttonDisabled : null]}>
                     <Text style={styles.ghostButtonText}>Thu hồi</Text>
-                  </Pressable>
+                  </AnimatedPressable>
                 </View>
               </View>
             ))}
@@ -282,8 +290,10 @@ export default function HouseholdShareScreen() {
 
       {currentMembers.length > 0 ? (
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionEyebrow}>THÀNH VIÊN</Text>
-          <Text style={styles.sectionTitle}>Danh sách đang cùng quản lý</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>👥 Thành Viên Trong Tổ Ấm</Text>
+            <Text style={styles.memberCountBadge}>{currentMembers.length} THÀNH VIÊN</Text>
+          </View>
           <View style={styles.stack}>
             {currentMembers.map((member) => {
               const isCurrentUser = member.accountId === authState.account.id;
@@ -310,42 +320,42 @@ export default function HouseholdShareScreen() {
                           styles.roleBadgeText,
                           member.isCreator ? styles.creatorBadgeText : null,
                         ]}>
-                        {member.isCreator ? 'Creator' : 'Co-manager'}
+                        {member.isCreator ? 'Admin' : 'Thành viên'}
                       </Text>
                     </View>
                     {canRemove ? (
-                      <Pressable
+                      <AnimatedPressable
                         accessibilityRole="button"
                         onPress={() =>
                           setPendingAction({
-                            title: 'Xác nhận gỡ thành viên',
+                            title: 'Xác nhận ngắt kết nối thành viên',
                             description:
-                              'Thành viên này sẽ rời household chia sẻ và không còn chỉnh được dữ liệu chung nữa.',
-                            confirmLabel: 'Gỡ thành viên',
+                              'Thành viên này sẽ rời khỏi tổ ấm chung và trở về dữ liệu độc lập.',
+                            confirmLabel: 'Ngắt kết nối',
                             tone: 'danger',
                             run: () => removeSharedMember(member.accountId),
                           })
                         }
                         style={styles.memberActionButton}>
                         <Text style={styles.memberActionText}>Gỡ</Text>
-                      </Pressable>
+                      </AnimatedPressable>
                     ) : null}
                     {canLeave ? (
-                      <Pressable
+                      <AnimatedPressable
                         accessibilityRole="button"
                         onPress={() =>
                           setPendingAction({
-                            title: 'Xác nhận rời household',
+                            title: 'Xác nhận rời khỏi tổ ấm',
                             description:
-                              'Account này sẽ rời nhóm cộng tác và quay về scope dữ liệu riêng của mình.',
-                            confirmLabel: 'Rời household',
+                              'Tài khoản của bạn sẽ tách khỏi nhóm và quay về không gian riêng.',
+                            confirmLabel: 'Rời tổ ấm',
                             tone: 'danger',
                             run: () => leaveSharedHousehold(),
                           })
                         }
                         style={styles.memberActionButton}>
                         <Text style={styles.memberActionText}>Rời nhóm</Text>
-                      </Pressable>
+                      </AnimatedPressable>
                     ) : null}
                   </View>
                 </View>
@@ -358,26 +368,25 @@ export default function HouseholdShareScreen() {
       {householdState.status === 'empty' && pendingShareInvites.length === 0 ? (
         <View style={styles.sectionCard}>
           <Text style={styles.sectionEyebrow}>BƯỚC TIẾP THEO</Text>
-          <Text style={styles.sectionTitle}>Bạn chưa có household để chia sẻ</Text>
+          <Text style={styles.sectionTitle}>Bạn Chưa Có Tổ Ấm Để Chia Sẻ</Text>
           <Text style={styles.sectionText}>
-            Tạo household trước để có dashboard và dữ liệu riêng, sau đó quay lại đây để mời thêm
-            một account cùng quản lý quỹ chung.
+            Tạo không gian tài chính trước để có dashboard và số liệu riêng, sau đó quay lại đây để mời bạn đời.
           </Text>
-          <Pressable
+          <AnimatedPressable
             accessibilityRole="button"
             onPress={() => router.push('/household/create' as never)}
             style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Tạo household ngay</Text>
-          </Pressable>
+            <Text style={styles.primaryButtonText}>Tạo Tổ Ấm Ngay →</Text>
+          </AnimatedPressable>
         </View>
       ) : null}
 
       <View style={styles.permissionsCard}>
-        <Text style={styles.sectionEyebrow}>QUYỀN TRUY CẬP</Text>
-        <Text style={styles.permissionItem}>• Cùng xem dashboard và báo cáo trên cùng một household</Text>
-        <Text style={styles.permissionItem}>• Cùng thêm hoặc xoá giao dịch để cập nhật dòng tiền</Text>
-        <Text style={styles.permissionItem}>• Cùng chỉnh phân bổ quỹ và cấu hình ngân sách</Text>
-        <Text style={styles.permissionItem}>• Cùng quản lý chia sẻ ở mức front-end demo hoàn chỉnh</Text>
+        <Text style={styles.permissionsEyebrow}>🛡️ NGUYÊN TẮC BẢO MẬT & PHÂN QUYỀN</Text>
+        <Text style={styles.permissionItem}>• Cả hai cùng thấy tổng thể dòng tiền, quỹ sinh hoạt và quỹ tích lũy</Text>
+        <Text style={styles.permissionItem}>• Mỗi người toàn quyền với ví riêng cá nhân ("Pocket Money"), không can thiệp</Text>
+        <Text style={styles.permissionItem}>• Mọi khoản chi từ quỹ chung đều cập nhật tức thời trên 2 máy</Text>
+        <Text style={styles.permissionItem}>• Dữ liệu đồng bộ cục bộ và hỗ trợ cloud sync an toàn</Text>
       </View>
 
       <PrimaryTabBar />
@@ -386,106 +395,227 @@ export default function HouseholdShareScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenContent: { gap: 18, paddingBottom: 32 },
+  screenContent: { gap: 16, paddingBottom: 24 },
   statusCard: {
-    backgroundColor: '#163B29',
-    borderRadius: 28,
+    backgroundColor: AnalyticsTheme.colors.cardElevated,
+    borderRadius: AnalyticsTheme.borderRadius.large,
+    borderColor: AnalyticsTheme.colors.borderLight,
+    borderWidth: 1,
     padding: 22,
+    marginTop: 8,
   },
-  statusEyebrow: { color: '#9AD6B1', fontSize: 12, fontWeight: '800', letterSpacing: 1.1 },
-  statusTitle: { color: '#FFFFFF', fontSize: 27, fontWeight: '900', marginTop: 10 },
-  statusText: { color: '#D4E4DA', fontSize: 14, lineHeight: 22, marginTop: 10 },
+  statusHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusEyebrow: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 1.2,
+  },
+  liveTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderColor: AnalyticsTheme.colors.cyan,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    gap: 5,
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: AnalyticsTheme.colors.cyan,
+  },
+  liveText: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 9,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+  statusTitle: {
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 22,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+    marginTop: 10,
+  },
+  statusText: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+
   sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#DCE5DF',
-    borderRadius: 26,
+    backgroundColor: AnalyticsTheme.colors.card,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.large,
     borderWidth: 1,
-    padding: 22,
+    padding: 18,
   },
-  permissionsCard: {
-    backgroundColor: '#FFF8E8',
-    borderColor: '#F4D38A',
-    borderRadius: 26,
-    borderWidth: 1,
-    padding: 22,
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  sectionEyebrow: { color: '#6A7A70', fontSize: 11, fontWeight: '800', letterSpacing: 1.1 },
-  sectionTitle: { color: '#17231D', fontSize: 22, fontWeight: '900', marginTop: 6 },
-  sectionText: { color: '#64736A', fontSize: 14, lineHeight: 22, marginTop: 10 },
-  fieldLabel: { color: '#25372D', fontSize: 14, fontWeight: '800', marginBottom: 10, marginTop: 16 },
+  memberCountBadge: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 10,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+  sectionEyebrow: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 1,
+  },
+  sectionTitle: {
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 16,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    marginTop: 4,
+  },
+  sectionText: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  fieldLabel: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    marginTop: 16,
+  },
   input: {
-    backgroundColor: '#FAFCFB',
-    borderColor: '#C7D3CC',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    color: '#15211B',
+    backgroundColor: AnalyticsTheme.colors.backgroundSubtle,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
+    borderWidth: 1,
+    color: AnalyticsTheme.colors.textPrimary,
     fontSize: 15,
     paddingHorizontal: 14,
     paddingVertical: 14,
   },
-  helperText: { color: '#8B5E12', fontSize: 13, lineHeight: 20, marginTop: 14 },
+  helperText: {
+    color: AnalyticsTheme.colors.amber,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 10,
+  },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: '#153E29',
-    borderRadius: 18,
+    backgroundColor: AnalyticsTheme.colors.cyan,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
     justifyContent: 'center',
-    marginTop: 16,
-    minHeight: 54,
+    marginTop: 14,
+    minHeight: 48,
   },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  primaryButtonText: {
+    color: '#041B2D',
+    fontSize: 14,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+  },
   buttonDisabled: { opacity: 0.45 },
-  stack: { gap: 12, marginTop: 16 },
+
+  stack: { gap: 10, marginTop: 14 },
   inviteCard: {
-    backgroundColor: '#F8FBF9',
-    borderColor: '#E2EAE5',
-    borderRadius: 20,
+    backgroundColor: AnalyticsTheme.colors.cardElevated,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
     borderWidth: 1,
-    padding: 16,
+    padding: 14,
   },
-  inviteHeader: { alignItems: 'center', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
-  inviteEmail: { color: '#15211B', fontSize: 15, fontWeight: '800' },
-  inviteMeta: { color: '#6A7A70', fontSize: 12, marginTop: 4 },
+  inviteHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  inviteEmail: {
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+  inviteMeta: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  boldCyan: {
+    color: AnalyticsTheme.colors.cyan,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+  },
   pendingBadge: {
-    backgroundColor: '#E7F6EC',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderColor: AnalyticsTheme.colors.amber,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  pendingBadgeText: { color: '#166534', fontSize: 11, fontWeight: '800' },
-  inlineActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  pendingBadgeText: {
+    color: AnalyticsTheme.colors.amber,
+    fontSize: 10,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+  inlineActions: { flexDirection: 'row', gap: 10, marginTop: 12 },
   primaryInlineButton: {
     alignItems: 'center',
-    backgroundColor: '#153E29',
-    borderRadius: 14,
+    backgroundColor: AnalyticsTheme.colors.emerald,
+    borderRadius: AnalyticsTheme.borderRadius.small,
     flex: 1,
     justifyContent: 'center',
-    minHeight: 46,
+    minHeight: 42,
   },
-  primaryInlineButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  primaryInlineButtonText: {
+    color: '#062817',
+    fontSize: 12,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+  },
   secondaryInlineButton: {
     alignItems: 'center',
-    backgroundColor: '#EEF2EF',
-    borderRadius: 14,
+    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    borderColor: AnalyticsTheme.colors.rose,
+    borderWidth: 1,
+    borderRadius: AnalyticsTheme.borderRadius.small,
     flex: 1,
     justifyContent: 'center',
-    minHeight: 46,
+    minHeight: 42,
   },
-  secondaryInlineButtonText: { color: '#4A5A51', fontSize: 13, fontWeight: '800' },
+  secondaryInlineButtonText: {
+    color: AnalyticsTheme.colors.rose,
+    fontSize: 12,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
   ghostButton: {
     alignItems: 'center',
-    backgroundColor: '#EEF2EF',
-    borderRadius: 14,
+    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    borderColor: AnalyticsTheme.colors.rose,
+    borderWidth: 1,
+    borderRadius: AnalyticsTheme.borderRadius.small,
     justifyContent: 'center',
-    minHeight: 40,
-    minWidth: 84,
-    paddingHorizontal: 14,
+    minHeight: 34,
+    paddingHorizontal: 12,
   },
-  ghostButtonText: { color: '#4A5A51', fontSize: 13, fontWeight: '800' },
+  ghostButtonText: {
+    color: AnalyticsTheme.colors.rose,
+    fontSize: 12,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+
   memberRow: {
     alignItems: 'flex-start',
-    backgroundColor: '#F7FAF8',
-    borderColor: '#E2EAE5',
-    borderRadius: 18,
+    backgroundColor: AnalyticsTheme.colors.cardElevated,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.medium,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 12,
@@ -493,36 +623,89 @@ const styles = StyleSheet.create({
   },
   avatar: {
     alignItems: 'center',
-    backgroundColor: '#DCF5E5',
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: AnalyticsTheme.colors.cyan,
+    borderWidth: 1,
     borderRadius: 999,
-    height: 44,
+    height: 40,
     justifyContent: 'center',
-    width: 44,
+    width: 40,
   },
-  avatarText: { color: '#166534', fontSize: 18, fontWeight: '900' },
+  avatarText: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 16,
+    fontWeight: AnalyticsTheme.typography.weightBlack,
+  },
   memberTextGroup: { flex: 1 },
-  memberName: { color: '#18251E', fontSize: 15, fontWeight: '800' },
-  memberMeta: { color: '#6A7A70', fontSize: 12, marginTop: 3 },
-  memberPermission: { color: '#405148', fontSize: 13, lineHeight: 20, marginTop: 6 },
-  memberActionCol: { alignItems: 'flex-end', gap: 8 },
-  roleBadge: {
-    backgroundColor: '#E6F5EB',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+  memberName: {
+    color: AnalyticsTheme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: AnalyticsTheme.typography.weightBold,
   },
-  creatorBadge: { backgroundColor: '#153E29' },
-  roleBadgeText: { color: '#165A36', fontSize: 11, fontWeight: '800' },
-  creatorBadgeText: { color: '#FFFFFF' },
+  memberMeta: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  memberPermission: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 4,
+  },
+  memberActionCol: { alignItems: 'flex-end', gap: 6 },
+  roleBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderColor: AnalyticsTheme.colors.cyan,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  creatorBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: AnalyticsTheme.colors.emerald,
+  },
+  roleBadgeText: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 10,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+  creatorBadgeText: {
+    color: AnalyticsTheme.colors.emerald,
+  },
   memberActionButton: {
     alignItems: 'center',
-    borderColor: '#D3DDD6',
-    borderRadius: 999,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.small,
     borderWidth: 1,
-    minWidth: 82,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
-  memberActionText: { color: '#43534A', fontSize: 12, fontWeight: '800' },
-  permissionItem: { color: '#7C5D28', fontSize: 14, lineHeight: 22, marginTop: 10 },
+  memberActionText: {
+    color: AnalyticsTheme.colors.rose,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+  },
+
+  permissionsCard: {
+    backgroundColor: AnalyticsTheme.colors.backgroundSubtle,
+    borderColor: AnalyticsTheme.colors.border,
+    borderRadius: AnalyticsTheme.borderRadius.large,
+    borderWidth: 1,
+    padding: 18,
+  },
+  permissionsEyebrow: {
+    color: AnalyticsTheme.colors.cyan,
+    fontSize: 11,
+    fontWeight: AnalyticsTheme.typography.weightBold,
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  permissionItem: {
+    color: AnalyticsTheme.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 4,
+  },
 });

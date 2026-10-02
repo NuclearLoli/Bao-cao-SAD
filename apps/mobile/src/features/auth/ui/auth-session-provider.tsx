@@ -2,6 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { CurrentIdentity, IdentityProvider } from '@/core/identity/identity-provider';
+import {
+  hashPassword,
+  securityRateLimiter,
+  validatePasswordStrength,
+  verifyPassword,
+  sanitizeInput,
+} from '@/core/security/security-utils';
 import { HOUSEHOLD_STORAGE_KEY } from '@/features/household/data/household-repository';
 
 const AUTH_STORAGE_KEY = 'cashflow.demo.auth';
@@ -15,6 +22,7 @@ export type DemoAccount = {
   displayName: string;
   email: string;
   password: string;
+  recoveryCode?: string;
   plan: DemoPlan;
   roleLabel: string;
 };
@@ -103,6 +111,9 @@ type AuthSessionContextValue = {
   signIn: (input: SignInInput) => Promise<void>;
   signUp: (input: SignUpInput) => Promise<void>;
   signOut: () => Promise<void>;
+  changePassword: (input: { currentPassword: string; newPassword: string }) => Promise<void>;
+  resetPassword: (input: { email: string; recoveryCode: string; newPassword: string }) => Promise<void>;
+  updateProfile: (input: { displayName: string }) => Promise<void>;
   continueWithDemoAccount: (accountId: string) => Promise<void>;
   createShareInvite: (input: CreateShareInviteInput) => Promise<ShareInviteSummary>;
   acceptShareInvite: (inviteId: string) => Promise<void>;
@@ -118,6 +129,7 @@ const initialAccounts: DemoAccount[] = [
     displayName: 'Nguyễn Văn Nu',
     email: 'nu@giadinh.vn',
     password: '123456',
+    recoveryCode: 'REC-NU-2026',
     plan: 'Plus',
     roleLabel: 'Đồng quản lý ngân sách',
   },
@@ -126,6 +138,7 @@ const initialAccounts: DemoAccount[] = [
     displayName: 'Mai Anh',
     email: 'mai@giadinh.vn',
     password: '123456',
+    recoveryCode: 'REC-MAI-2026',
     plan: 'Pro',
     roleLabel: 'Theo dõi chi tiêu & AI insight',
   },
@@ -507,19 +520,31 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
         }
 
         const normalizedEmail = normalizeEmail(email);
-        const account = store.accounts.find(
-          (candidate) =>
-            normalizeEmail(candidate.email) === normalizedEmail &&
-            candidate.password === password,
-        );
-
-        if (!account) {
-          throw new Error('Email hoặc mật khẩu chưa đúng.');
+        const rateCheck = securityRateLimiter.checkAttempt(`signin_${normalizedEmail}`);
+        if (!rateCheck.allowed) {
+          throw new Error(
+            `Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau ${rateCheck.remainingWaitSec}s.`,
+          );
         }
 
+        const candidate = store.accounts.find(
+          (acc) => normalizeEmail(acc.email) === normalizedEmail,
+        );
+
+        if (!candidate || !verifyPassword(password, candidate.password, candidate.id)) {
+          const failure = securityRateLimiter.recordFailure(`signin_${normalizedEmail}`);
+          if (failure.isLocked) {
+            throw new Error(
+              `Đăng nhập sai 5 lần! Tài khoản tạm thời bị khóa trong ${failure.remainingWaitSec}s để bảo vệ an toàn.`,
+            );
+          }
+          throw new Error('Email hoặc mật khẩu chưa chính xác.');
+        }
+
+        securityRateLimiter.recordSuccess(`signin_${normalizedEmail}`);
         await persistAndSetStore({
           ...store,
-          currentUserId: account.id,
+          currentUserId: candidate.id,
         });
       },
       signUp: async ({ displayName, email, password, plan }) => {
@@ -527,20 +552,38 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
           return;
         }
 
+        const cleanDisplayName = sanitizeInput(displayName);
+        if (!cleanDisplayName) {
+          throw new Error('Vui lòng nhập họ tên hợp lệ.');
+        }
+
         const normalizedEmail = normalizeEmail(email);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+          throw new Error('Địa chỉ email không đúng định dạng.');
+        }
+
         if (
           store.accounts.some(
             (candidate) => normalizeEmail(candidate.email) === normalizedEmail,
           )
         ) {
-          throw new Error('Email này đã tồn tại trong bản demo.');
+          throw new Error('Email này đã được sử dụng. Vui lòng đăng nhập.');
         }
 
+        const strengthCheck = validatePasswordStrength(password);
+        if (!strengthCheck.valid) {
+          throw new Error(strengthCheck.message);
+        }
+
+        const accountId = `user_${Date.now()}`;
+        const recoveryCode = `REC-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+
         const nextAccount: DemoAccount = {
-          id: `demo_${Date.now()}`,
-          displayName: displayName.trim(),
+          id: accountId,
+          displayName: cleanDisplayName,
           email: normalizedEmail,
-          password,
+          password: hashPassword(password, accountId),
+          recoveryCode,
           plan,
           roleLabel: 'Chủ tài khoản chính',
         };
@@ -549,6 +592,97 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
           ...store,
           accounts: [...store.accounts, nextAccount],
           currentUserId: nextAccount.id,
+        });
+      },
+      changePassword: async ({ currentPassword, newPassword }) => {
+        if (store === null || currentAccount === null) {
+          throw new Error('Bạn cần đăng nhập để đổi mật khẩu.');
+        }
+
+        if (!verifyPassword(currentPassword, currentAccount.password, currentAccount.id)) {
+          throw new Error('Mật khẩu hiện tại không chính xác.');
+        }
+
+        const strengthCheck = validatePasswordStrength(newPassword);
+        if (!strengthCheck.valid) {
+          throw new Error(strengthCheck.message);
+        }
+
+        const updatedAccount: DemoAccount = {
+          ...currentAccount,
+          password: hashPassword(newPassword, currentAccount.id),
+        };
+
+        const nextAccounts = store.accounts.map((acc) =>
+          acc.id === currentAccount.id ? updatedAccount : acc,
+        );
+
+        await persistAndSetStore({
+          ...store,
+          accounts: nextAccounts,
+        });
+      },
+      resetPassword: async ({ email, recoveryCode, newPassword }) => {
+        if (store === null) {
+          return;
+        }
+
+        const normalizedEmail = normalizeEmail(email);
+        const targetAccount = store.accounts.find(
+          (acc) => normalizeEmail(acc.email) === normalizedEmail,
+        );
+
+        if (!targetAccount) {
+          throw new Error('Không tìm thấy tài khoản với email này.');
+        }
+
+        const expectedCode = targetAccount.recoveryCode ?? `REC-${targetAccount.id.slice(0, 4).toUpperCase()}`;
+        if (recoveryCode.trim().toUpperCase() !== expectedCode.toUpperCase()) {
+          throw new Error('Mã khôi phục tài khoản không khớp.');
+        }
+
+        const strengthCheck = validatePasswordStrength(newPassword);
+        if (!strengthCheck.valid) {
+          throw new Error(strengthCheck.message);
+        }
+
+        const updatedAccount: DemoAccount = {
+          ...targetAccount,
+          password: hashPassword(newPassword, targetAccount.id),
+        };
+
+        const nextAccounts = store.accounts.map((acc) =>
+          acc.id === targetAccount.id ? updatedAccount : acc,
+        );
+
+        await persistAndSetStore({
+          ...store,
+          accounts: nextAccounts,
+          currentUserId: targetAccount.id,
+        });
+      },
+      updateProfile: async ({ displayName }) => {
+        if (store === null || currentAccount === null) {
+          throw new Error('Bạn cần đăng nhập để cập nhật hồ sơ.');
+        }
+
+        const cleanDisplayName = sanitizeInput(displayName);
+        if (!cleanDisplayName) {
+          throw new Error('Tên hiển thị không được để trống.');
+        }
+
+        const updatedAccount: DemoAccount = {
+          ...currentAccount,
+          displayName: cleanDisplayName,
+        };
+
+        const nextAccounts = store.accounts.map((acc) =>
+          acc.id === currentAccount.id ? updatedAccount : acc,
+        );
+
+        await persistAndSetStore({
+          ...store,
+          accounts: nextAccounts,
         });
       },
       signOut: async () => {

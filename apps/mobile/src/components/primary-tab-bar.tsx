@@ -1,12 +1,57 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-const tabs = [
-  { label: 'Tổng quan', href: '/dashboard', match: '/dashboard' },
-  { label: 'Ngân sách', href: '/budget/setup', match: '/budget' },
-  { label: 'Giao dịch', href: '/transactions', match: '/transactions' },
-  { label: 'Tài khoản', href: '/account', match: '/account' },
-] as const;
+import { AnimatedPressable } from '@/components/animated-pressable';
+import { AnalyticsTheme } from '@/theme/analytics-theme';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+type TabItem = {
+  label: string;
+  iconName: IconName;
+  activeIconName: IconName;
+  href: string;
+  match: string;
+};
+
+const tabs: TabItem[] = [
+  {
+    label: 'Tổng quan',
+    iconName: 'stats-chart-outline',
+    activeIconName: 'stats-chart',
+    href: '/dashboard',
+    match: '/dashboard',
+  },
+  {
+    label: 'Giao dịch',
+    iconName: 'receipt-outline',
+    activeIconName: 'receipt',
+    href: '/transactions',
+    match: '/transactions',
+  },
+  {
+    label: 'Ngân sách',
+    iconName: 'wallet-outline',
+    activeIconName: 'wallet',
+    href: '/budget/setup',
+    match: '/budget',
+  },
+  {
+    label: 'Mục tiêu',
+    iconName: 'flag-outline',
+    activeIconName: 'flag',
+    href: '/bills-and-goals',
+    match: '/bills-and-goals',
+  },
+  {
+    label: 'Hồ sơ',
+    iconName: 'person-outline',
+    activeIconName: 'person',
+    href: '/account',
+    match: '/account',
+  },
+];
 
 export function PrimaryTabBar() {
   const pathname = usePathname();
@@ -17,13 +62,23 @@ export function PrimaryTabBar() {
       {tabs.map((tab) => {
         const active = pathname.startsWith(tab.match);
         return (
-          <Pressable
+          <AnimatedPressable
             key={tab.href}
             accessibilityRole="button"
             onPress={() => navigate(tab.href)}
             style={[styles.tab, active ? styles.tabActive : null]}>
-            <Text style={[styles.tabText, active ? styles.tabTextActive : null]}>{tab.label}</Text>
-          </Pressable>
+            <Ionicons
+              name={active ? tab.activeIconName : tab.iconName}
+              size={20}
+              color={active ? AnalyticsTheme.colors.cyan : AnalyticsTheme.colors.textMuted}
+            />
+            <Text
+              numberOfLines={1}
+              style={[styles.tabText, active ? styles.tabTextActive : null]}>
+              {tab.label}
+            </Text>
+            {active && <View style={styles.activeDot} />}
+          </AnimatedPressable>
         );
       })}
     </View>
@@ -32,29 +87,54 @@ export function PrimaryTabBar() {
 
 const styles = StyleSheet.create({
   shell: {
-    backgroundColor: '#E7EEE9',
-    borderRadius: 22,
+    backgroundColor: '#0F1626',
+    borderColor: AnalyticsTheme.colors.borderLight,
+    borderWidth: 1,
+    borderRadius: 24,
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 28,
-    padding: 8,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 4,
+    marginTop: 20,
+    padding: 6,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
   },
   tab: {
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 18,
     flex: 1,
     justifyContent: 'center',
-    minHeight: 48,
-    paddingHorizontal: 8,
+    minHeight: 52,
+    paddingVertical: 6,
+    gap: 3,
+    position: 'relative',
   },
   tabActive: {
-    backgroundColor: '#153E29',
-    elevation: 3,
-    shadowColor: '#122118',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+    borderWidth: 1,
   },
-  tabText: { color: '#617067', fontSize: 13, fontWeight: '700' },
-  tabTextActive: { color: '#FFFFFF' },
+  tabText: {
+    color: AnalyticsTheme.colors.textMuted,
+    fontSize: 10.5,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  tabTextActive: {
+    color: AnalyticsTheme.colors.cyan,
+    fontWeight: '800',
+  },
+  activeDot: {
+    position: 'absolute',
+    bottom: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: AnalyticsTheme.colors.cyan,
+  },
 });
